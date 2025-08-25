@@ -1,13 +1,14 @@
-
-import dotenv from 'dotenv'
-import express from 'express'
-import notesRoute from './routes/notesRoute.js';
-dotenv.config()
+import dotenv from "dotenv";
+import express from "express";
+import notesRoute from "./routes/notesRoute.js";
+import dbConnect from "./config/dbConnect.js";
+dotenv.config();
+dbConnect()
 let notes = [
   {
     id: "1",
     content: "HTML is easy",
-    important: true
+    important: true,
   },
   {
     id: "2",
@@ -20,16 +21,13 @@ let notes = [
     important: true,
   },
 ];
-const Port = process.env.PORT || 4000
-const app = express()
-app.use(express.json())
-app.use('/notes',notesRoute)
-app.get('/',(req, res) => {
+const Port = process.env.PORT || 4000;
+const app = express();
+app.use(express.json());
+app.use("/notes", notesRoute);
+app.get("/", (req, res) => {
   res.send("<h1>Hello world</h1>");
-})
-
-app.listen(Port,()=>{
-    console.log(`Listening on ${Port}`);
-    
-})
-
+});
+app.listen(Port, () => {
+  console.log(`Listening on ${Port}`);
+});
