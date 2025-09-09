@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 import express from "express";
 import router  from "./routes/notesRoute.js";
 import dbConnect from "./config/dbConnect.js";
+import { rateLimiter } from "./middleware/rateLimitter.js";
+import cors from 'cors'
 dotenv.config();
 dbConnect()
 // let notes = [
@@ -24,6 +26,8 @@ dbConnect()
 const Port = process.env.PORT || 4000;
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: "http://localhost:5173" }));
+app.use(rateLimiter)
 app.use("/notes", router);
 app.get("/", (req, res) => {
   res.send("<h1>Hello world</h1>");
