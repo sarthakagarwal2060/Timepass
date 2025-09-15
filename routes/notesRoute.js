@@ -1,11 +1,15 @@
-import express from 'express'
-import { deleteNote, getAllNotes, getNote, postNote,updateNote } from '../controller/notesController.js'
-console.log({ deleteNote, getAllNotes, getNote, postNote });
+import express from "express";
+import {
+  deleteNote,
+  getAllNotes,
+  postNote,
+  updateNote,
+} from "../controller/notesController.js";
+import isAuth from "../middleware/authMiddleware.js";
 
-const router = express.Router()
-router.get('/',getAllNotes)
-router.get('/:id',getNote)
-router.delete('/:id',deleteNote)
-router.post('/',postNote)
-router.put('/:id',updateNote)
-export default router
+const notesRouter = express.Router();
+notesRouter.use(isAuth)
+notesRouter.route("/").get(getAllNotes).post(postNote);
+
+notesRouter.route("/:id").delete(deleteNote).put(updateNote);
+export default notesRouter

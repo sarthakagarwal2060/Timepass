@@ -2,90 +2,72 @@
 //   res.send("<h1>Hello world</h1>");
 // };
 import Note from "../models/notes.js";
-let notes = [
-  {
-    id: "1",
-    content: "HTML is easy",
-    important: true,
-  },
-  {
-    id: "2",
-    content: "Browser can execute only JavaScript",
-    important: false,
-  },
-  {
-    id: "3",
-    content: "GET and POST are the most important methods of HTTP protocol",
-    important: true,
-  },
-];
 export const getAllNotes = async (req, res) => {
-  // if (notes.length != 0) {
-  //   res.json(notes);
-  // } else {
-  //   res.status(404).json({ message: "Data not found" });
-  // }
-  try {
-    const notes = await Note.find();
-    res.json(notes).status(200);
-  } catch {
-    console.error("Error in getAIlNotes controller", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+ try {
+   const { tag, search } = req.query;
+   const filter = { userId: req.user.id };
+   if (tag) filter.tags = tag;
+   if (search)
+     filter.$or = [
+       { title: { $regex: search, $options: "i" } },
+       { content: { $regex: search, $options: "i" } },
+     ];
+   const notes = await Note.find(filter).sort({ createdAt: -1 });
+   res.status(200).json(notes);
+ } catch (error) {
+   console.error("Error in getAllNotes:", error);
+   res.status(500).json({ message: "Internal server error" });
+ }
 };
-export const getNote =async (req, res) => {
-  try{
-    const id = req.params.id;
-    const note = await Note.findById(id)
-    if(!note) return res.status(404).json({message:"Note not found"})
-    return res.status(200).json(note)
+// export const getNote =async (req, res) => {
+//   try{
+//     const id = req.params.id;
+//     const note = await Note.findById(id)
+//     if(!note) return res.status(404).json({message:"Note not found"})
+//     return res.status(200).json(note)
 
-  }
-  catch{
-    // console.error("Error in updateNote controller", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+//   }
+//   catch{
+//     // console.error("Error in updateNote controller", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 export const deleteNote =async (req, res) => {
-  try{
-    const id = req.params.id;
-    const note = await Note.findByIdAndDelete(id)
-    if(!note) return res.status(404).json({ message: "Note not found" });
-    res.status(200).json({ message: "Note deleted successfully!" });
-
-  }catch{
-     res.status(500).json({ message: "Internal server error" });
-  }
+    try {
+      const note = await Note.findOneAndDelete({
+        _id: req.params.id,
+        userId: req.user.id,
+      });
+      if (!note) return res.status(404).json({ message: "Note not found" });
+      res.status(200).json({ message: "Note deleted successfully!" });
+    } catch (error) {
+      console.error("Error in deleteNote:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
 
 };
 export const postNote = async (req, res) => {
-  // const note = req.body;
-  // if (!note || !note.id || !note.content) {
-  //   return res.status(400).json({ message: "Invalid note data" });
-  // }
-  // notes.push(note);
-  // console.log(note);
-  // res.status(201).json(note);
+
   try {
-    const { title, content } = req.body;
-    const newNote = new Note({ title, content });
+    const { title, content,tags } = req.body;
+    const newNote = new Note({ title, content ,tags,userId:req.user.id,createdAt:new Date()});
     await newNote.save();
-    res.status(201).json(newNote);
+    res.status(201).json({message:"Note create successfully",newNote});
   } catch {
     res.status(500).json({ message: "Internal server error" });
   }
 };
 export const updateNote = async (req, res) => {
-  try {
-    const { title, content } = req.body;
-    const note = await Note.findByIdAndUpdate(req.params.id, {
-      title,
-      content,
-    });
-    if (!note) return res.status(404).json({ message: "Note not found" });
-    res.status(200).json({ message: "Note updated successfully!" });
-  } catch {
-    // console.error("Error in updateNote controller", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+ try {
+   const { title, content, tags } = req.body;
+   const note = await Note.findOneAndUpdate(
+     { _id: req.params.id, userId: req.user.id},
+     { title, content, tags }
+   );
+   if (!note) return res.status(404).json({ message: "Note not found" });
+   res.status(200).json(note);
+ } catch (error) {
+   console.error("Error in updateNote:", error);
+   res.status(500).json({ message: "Internal server error" });
+ }
 };

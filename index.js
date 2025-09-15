@@ -1,34 +1,28 @@
 import dotenv from "dotenv";
 import express from "express";
-import router  from "./routes/notesRoute.js";
+import notesRoute from "./routes/notesRoute.js";
+import authRoute from "./routes/authRoute.js";
 import dbConnect from "./config/dbConnect.js";
 import { rateLimiter } from "./middleware/rateLimitter.js";
-import cors from 'cors'
+import cors from "cors";
+import cookieParser from "cookie-parser";
 dotenv.config();
-dbConnect()
-// let notes = [
-//   {
-//     id: "1",
-//     content: "HTML is easy",
-//     important: true,
-//   },
-//   {
-//     id: "2",
-//     content: "Browser can execute only JavaScript",
-//     important: false,
-//   },
-//   {
-//     id: "3",
-//     content: "GET and POST are the most important methods of HTTP protocol",
-//     important: true,
-//   },
-// ];
+dbConnect();
+
 const Port = process.env.PORT || 4000;
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173" }));
-app.use(rateLimiter)
-app.use("/notes", router);
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5174",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+app.use(rateLimiter);
+app.use("/notes", notesRoute);
+app.use("/auth", authRoute);
 app.get("/", (req, res) => {
   res.send("<h1>Hello world</h1>");
 });
